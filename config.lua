@@ -29,15 +29,15 @@ lvim.lang.python.linters = {
 }
 
 -- additional Plugins
-lvim.plugins = {
-  { "lunarvim/colorschemes" },
-}
+require("user.plugins").config()
 
 -- builtin plugins
 lvim.builtin.dashboard.active = true
 lvim.builtin.terminal.active = true
+lvim.builtin.bufferline.active = true
 lvim.builtin.nvimtree.side = "left"
 lvim.builtin.nvimtree.show_icons.git = 0
+lvim.builtin.nvimtree.auto_open = 0
 lvim.builtin.dashboard.custom_header = {
 '⠄⠄⠄⠄⠄⠄⢀⣠⣤⣶⣶⣶⣤⣄⠄⠄⢀⣠⣤⣤⣤⣤⣀⠄⠄⠄⠄⠄⠄⠄',
 '⠄⠄⠄⠄⢠⣾⣿⣿⣿⣿⠿⠿⢿⣿⣿⡆⣿⣿⣿⣿⣿⣿⣿⣷⡄⠄⠄⠄⠄⠄',
