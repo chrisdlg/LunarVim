@@ -1,7 +1,7 @@
 -- general
 lvim.format_on_save = true
 lvim.lint_on_save = true
-lvim.colorscheme = "onedark"
+lvim.colorscheme = "onedarker"
 vim.opt.relativenumber = true
 vim.opt.wrap = true
 lvim.leader = "space"
