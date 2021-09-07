@@ -134,6 +134,20 @@ lvim.lang = {
       },
     },
   },
+  bicep = {
+    formatters = {},
+    linters = {},
+    lsp = {
+      provider = "bicep",
+      setup = {
+        cmd = {
+          "dotnet",
+          DATA_PATH .. "/lspinstall/bicep/Bicep.LangServer.dll",
+        },
+        filetypes = { "bicep" },
+      },
+    },
+  },
   c = {
     formatters = {
       -- {
@@ -334,7 +348,7 @@ lvim.lang = {
       },
     },
   },
-  docker = {
+  dockerfile = {
     formatters = {},
     linters = {},
     lsp = {
@@ -682,6 +696,16 @@ lvim.lang = {
     lsp = {
       provider = "",
       setup = {},
+    },
+  },
+  solidity = {
+    formatters = {},
+    linters = {},
+    lsp = {
+      provider = "solang",
+      setup = {
+        cmd = { "solang", "--language-server" },
+      },
     },
   },
   sql = {
