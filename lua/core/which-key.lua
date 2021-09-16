@@ -176,7 +176,7 @@ M.config = function()
       L = {
         name = "+LunarVim",
         c = {
-          "<cmd>edit ~/.config/lvim/config.lua<cr>",
+          "<cmd>edit" .. get_config_dir() .. "/config.lua<cr>",
           "Edit config.lua",
         },
         f = {
@@ -209,6 +209,7 @@ M.config = function()
           },
           P = { "<cmd>edit ~/.cache/nvim/packer.nvim.log<cr>", "Open the Packer logfile" },
         },
+        r = { "<cmd>lua require('utils').reload_lv_config()<cr>", "Reload configurations" },
       },
       s = {
         name = "Search",
