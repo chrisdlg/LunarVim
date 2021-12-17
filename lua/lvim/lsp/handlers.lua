@@ -9,52 +9,10 @@ function M.setup()
     underline = lvim.lsp.diagnostics.underline,
     update_in_insert = lvim.lsp.diagnostics.update_in_insert,
     severity_sort = lvim.lsp.diagnostics.severity_sort,
+    float = lvim.lsp.diagnostics.float,
   }
-  if vim.fn.has "nvim-0.5.1" > 0 then
-    vim.lsp.handlers["textDocument/publishDiagnostics"] = function(_, result, ctx, _)
-      local uri = result.uri
-      local bufnr = vim.uri_to_bufnr(uri)
-      if not bufnr then
-        return
-      end
-
-      local diagnostics = result.diagnostics
-      local ok, vim_diag = pcall(require, "vim.diagnostic")
-      if ok then
-        -- FIX: why can't we just use vim.diagnostic.get(buf_id)?
-        config.signs = true
-        for i, diagnostic in ipairs(diagnostics) do
-          local rng = diagnostic.range
-          diagnostics[i].lnum = rng["start"].line
-          diagnostics[i].end_lnum = rng["end"].line
-          diagnostics[i].col = rng["start"].character
-          diagnostics[i].end_col = rng["end"].character
-        end
-        local namespace = vim.lsp.diagnostic.get_namespace(ctx.client_id)
-
-        vim_diag.set(namespace, bufnr, diagnostics, config)
-        if not vim.api.nvim_buf_is_loaded(bufnr) then
-          return
-        end
-
-        local sign_names = {
-          "DiagnosticSignError",
-          "DiagnosticSignWarn",
-          "DiagnosticSignInfo",
-          "DiagnosticSignHint",
-        }
-        for i, sign in ipairs(lvim.lsp.diagnostics.signs.values) do
-          vim.fn.sign_define(sign_names[i], { texthl = sign_names[i], text = sign.text, numhl = "" })
-        end
-        vim_diag.show(namespace, bufnr, diagnostics, config)
-      else
-        vim.lsp.diagnostic.save(diagnostics, bufnr, ctx.client_id)
-        if not vim.api.nvim_buf_is_loaded(bufnr) then
-          return
-        end
-        vim.lsp.diagnostic.display(diagnostics, bufnr, ctx.client_id, config)
-      end
-    end
+  if vim.fn.has "nvim-0.6" == 1 then
+    vim.diagnostic.config(config)
   else
     vim.lsp.handlers["textDocument/publishDiagnostics"] = function(_, _, params, client_id, _)
       local uri = params.uri
@@ -70,27 +28,29 @@ function M.setup()
       end
       vim.lsp.diagnostic.display(diagnostics, bufnr, client_id, config)
     end
+
+    vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+      border = lvim.lsp.popup_border,
+    })
+
+    vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+      border = lvim.lsp.popup_border,
+    })
   end
-
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-    border = lvim.lsp.popup_border,
-  })
-
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-    border = lvim.lsp.popup_border,
-  })
-end
-
-local function split_by_chunk(text, chunkSize)
-  local s = {}
-  for i = 1, #text, chunkSize do
-    s[#s + 1] = text:sub(i, i + chunkSize - 1)
-  end
-  return s
 end
 
 function M.show_line_diagnostics()
-  -- TODO: replace all this with vim.diagnostic.show_position_diagnostics()
+  if vim.fn.has "nvim-0.6" == 1 then
+    return vim.diagnostic.open_float(0, { scope = "line" })
+  end
+
+  local function split_by_chunk(text, chunkSize)
+    local s = {}
+    for i = 1, #text, chunkSize do
+      s[#s + 1] = text:sub(i, i + chunkSize - 1)
+    end
+    return s
+  end
   local diagnostics = vim.lsp.diagnostic.get_line_diagnostics()
   local severity_highlight = {
     "LspDiagnosticsFloatingError",
@@ -125,7 +85,18 @@ function M.show_line_diagnostics()
   table.sort(diagnostics, function(a, b)
     return a.severity < b.severity
   end)
-  for i, diagnostic in ipairs(diagnostics) do
+
+  local hash = {}
+  local diagnostics_no_dupes = {}
+  for _, v in ipairs(diagnostics) do
+    if not hash[v["message"]] then
+      diagnostics_no_dupes[#diagnostics_no_dupes + 1] = v -- you could print here instead of saving to result table if you wanted
+      hash[v["message"]] = true
+    end
+  end
+  -- print(vim.inspect(diagnostics_no_dupes))
+
+  for i, diagnostic in ipairs(diagnostics_no_dupes) do
     local source = diagnostic.source
     diag_message = diagnostic.message:gsub("[\n\r]", " ")
     if source then

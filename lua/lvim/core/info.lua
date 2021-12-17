@@ -20,6 +20,7 @@ end
 local function make_formatters_info(ft)
   local null_formatters = require "lvim.lsp.null-ls.formatters"
   local registered_formatters = null_formatters.list_registered_providers(ft)
+  -- print("reg", vim.inspect(registered_formatters))
   local supported_formatters = null_formatters.list_available(ft)
   local section = {
     "Formatters info",
@@ -29,6 +30,23 @@ local function make_formatters_info(ft)
       vim.tbl_count(registered_formatters) > 0 and "  " or ""
     ),
     fmt("* Supported: %s", str_list(supported_formatters)),
+  }
+
+  return section
+end
+
+local function make_code_actions_info(ft)
+  local null_actions = require "lvim.lsp.null-ls.code_actions"
+  local registered_actions = null_actions.list_registered_providers(ft)
+  local supported_actions = null_actions.list_available(ft)
+  local section = {
+    "Code actions info",
+    fmt(
+      "* Active: %s%s",
+      table.concat(registered_actions, "  , "),
+      vim.tbl_count(registered_actions) > 0 and "  " or ""
+    ),
+    fmt("* Supported: %s", str_list(supported_actions)),
   }
 
   return section
@@ -61,11 +79,13 @@ local function make_client_info(client)
   local client_enabled_caps = lsp_utils.get_client_capabilities(client.id)
   local name = client.name
   local id = client.id
+  local filetypes = lsp_utils.get_supported_filetypes(name)
   local document_formatting = client.resolved_capabilities.document_formatting
   local attached_buffers_list = table.concat(vim.lsp.get_buffers_by_client_id(client.id), ", ")
   local client_info = {
     fmt("* Name:                      %s", name),
     fmt("* Id:                        [%s]", tostring(id)),
+    fmt("* filetype(s):               [%s]", table.concat(filetypes, ", ")),
     fmt("* Attached buffers:          [%s]", tostring(attached_buffers_list)),
     fmt("* Supports formatting:       %s", tostring(document_formatting)),
   }
@@ -106,7 +126,7 @@ function M.toggle_popup(ft)
 
   local lsp_info = {
     "Language Server Protocol (LSP) info",
-    fmt "* Associated server(s):",
+    fmt "* Active server(s):",
   }
 
   for _, client in pairs(clients) do
@@ -117,6 +137,8 @@ function M.toggle_popup(ft)
   local formatters_info = make_formatters_info(ft)
 
   local linters_info = make_linters_info(ft)
+
+  local code_actions_info = make_code_actions_info(ft)
 
   local content_provider = function(popup)
     local content = {}
@@ -134,6 +156,8 @@ function M.toggle_popup(ft)
       formatters_info,
       { "" },
       linters_info,
+      { "" },
+      code_actions_info,
     } do
       vim.list_extend(content, section)
     end
@@ -148,6 +172,7 @@ function M.toggle_popup(ft)
     vim.cmd [[let m=matchadd("LvimInfoHeader", "Language Server Protocol (LSP) info")]]
     vim.cmd [[let m=matchadd("LvimInfoHeader", "Formatters info")]]
     vim.cmd [[let m=matchadd("LvimInfoHeader", "Linters info")]]
+    vim.cmd [[let m=matchadd("LvimInfoHeader", "Code actions info")]]
     vim.cmd('let m=matchadd("LvimInfoIdentifier", " ' .. ft .. '$")')
     vim.cmd 'let m=matchadd("string", "true")'
     vim.cmd 'let m=matchadd("string", "active")'
@@ -157,6 +182,7 @@ function M.toggle_popup(ft)
     -- tbl_set_highlight(registered_providers, "LvimInfoIdentifier")
     tbl_set_highlight(require("lvim.lsp.null-ls.formatters").list_available(ft), "LvimInfoIdentifier")
     tbl_set_highlight(require("lvim.lsp.null-ls.linters").list_available(ft), "LvimInfoIdentifier")
+    tbl_set_highlight(require("lvim.lsp.null-ls.code_actions").list_available(ft), "LvimInfoIdentifier")
   end
 
   local Popup = require("lvim.interface.popup"):new {

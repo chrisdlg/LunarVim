@@ -22,21 +22,22 @@ function M.get_active_clients_by_ft(filetype)
 end
 
 function M.get_client_capabilities(client_id)
+  local client
   if not client_id then
     local buf_clients = vim.lsp.buf_get_clients()
-    for _, buf_client in ipairs(buf_clients) do
+    for _, buf_client in pairs(buf_clients) do
       if buf_client.name ~= "null-ls" then
-        client_id = buf_client.id
+        client = buf_client
         break
       end
     end
+  else
+    client = vim.lsp.get_client_by_id(tonumber(client_id))
   end
-  if not client_id then
+  if not client then
     error "Unable to determine client_id"
     return
   end
-
-  local client = vim.lsp.get_client_by_id(tonumber(client_id))
 
   local enabled_caps = {}
   for capability, status in pairs(client.resolved_capabilities) do
@@ -49,14 +50,17 @@ function M.get_client_capabilities(client_id)
 end
 
 function M.get_supported_filetypes(server_name)
-  -- print("got filetypes query request for: " .. server_name)
-  local configs = require "lspconfig/configs"
-  pcall(require, ("lspconfig/" .. server_name))
-  for _, config in pairs(configs) do
-    if config.name == server_name then
-      return config.document_config.default_config.filetypes or {}
-    end
+  -- temporary workaround: https://github.com/neovim/nvim-lspconfig/pull/1358
+  if server_name == "dockerls" then
+    return { "dockerfile" }
   end
+  local lsp_installer_servers = require "nvim-lsp-installer.servers"
+  local server_available, requested_server = lsp_installer_servers.get_server(server_name)
+  if not server_available then
+    return {}
+  end
+
+  return requested_server:get_supported_filetypes()
 end
 
 return M

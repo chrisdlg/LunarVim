@@ -161,8 +161,6 @@ M.config = function()
       select = false,
     },
     completion = {
-      ---@usage vim's `completeopt` setting. Warning: Be careful when changing this value.
-      completeopt = "menu,menuone,noinsert",
       ---@usage The minimum length of a word to complete on.
       keyword_length = 1,
     },
@@ -171,6 +169,7 @@ M.config = function()
       native_menu = false,
     },
     formatting = {
+      fields = { "kind", "abbr", "menu" },
       kind_icons = {
         Class = " ",
         Color = " ",
@@ -284,6 +283,9 @@ M.config = function()
       ["<C-e>"] = cmp.mapping.abort(),
       ["<CR>"] = cmp.mapping(function(fallback)
         if cmp.visible() and cmp.confirm(lvim.builtin.cmp.confirm_opts) then
+          if jumpable() then
+            luasnip.jump(1)
+          end
           return
         end
 
@@ -299,8 +301,7 @@ M.config = function()
   }
 end
 
-M.setup = function()
-  require("luasnip/loaders/from_vscode").lazy_load()
+function M.setup()
   require("cmp").setup(lvim.builtin.cmp)
 end
 

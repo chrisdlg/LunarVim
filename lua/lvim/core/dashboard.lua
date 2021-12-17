@@ -31,22 +31,26 @@ M.config = function(config)
 
     custom_section = {
       a = {
-        description = { "  Find File          " },
+        description = { "  Find File          " },
         command = "Telescope find_files",
       },
       b = {
+        description = { "  New File           " },
+        command = ":ene!",
+      },
+      c = {
         description = { "  Recent Projects    " },
         command = "Telescope projects",
       },
-      c = {
+      d = {
         description = { "  Recently Used Files" },
         command = "Telescope oldfiles",
       },
-      d = {
+      e = {
         description = { "  Find Word          " },
         command = "Telescope live_grep",
       },
-      e = {
+      f = {
         description = { "  Configuration      " },
         command = ":e " .. config.user_config_file,
       },
@@ -54,6 +58,7 @@ M.config = function(config)
 
     footer = { "lunarvim.org" },
   }
+  lvim.builtin.which_key.mappings[";"] = { "<cmd>Dashboard<CR>", "Dashboard" }
 end
 
 M.setup = function()
@@ -64,8 +69,6 @@ M.setup = function()
   vim.g.dashboard_default_executive = lvim.builtin.dashboard.search_handler
 
   vim.g.dashboard_custom_section = lvim.builtin.dashboard.custom_section
-
-  lvim.builtin.which_key.mappings[";"] = { "<cmd>Dashboard<CR>", "Dashboard" }
 
   vim.g.dashboard_session_directory = lvim.builtin.dashboard.session_directory
 
@@ -81,7 +84,7 @@ M.setup = function()
 
   if lvim_version then
     table.insert(footer, 2, "")
-    table.insert(footer, 3, "v" .. lvim_version)
+    table.insert(footer, 2, lvim_version)
   end
 
   local text = require "lvim.interface.text"
